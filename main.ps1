@@ -49,8 +49,44 @@ $ViewCurrentTasksTab.Name = "View Scheduled Tasks"
 $ViewCurrentTasksTab.Text = "View Scheduled Tasks"
 $FormTabControl.Controls.Add($ViewCurrentTasksTab)
 
+#Top Folder Dropdown
+$TopFolderDropdownLabel = New-Object System.Windows.Forms.Label
+$TopFolderDropdownLabel.text = "Top Folder"
+$TopFolderDropdownLabel.Width = 70
+$TopFolderDropdownLabel.location = New-Object System.Drawing.Point(10,10)
+$ViewCurrentTasksTab.Controls.Add($TopFolderDropdownLabel)
+$TopFolderDropdown = New-Object System.Windows.Forms.ComboBox
+$TopFolderDropdown.text = ""
+$TopFolderDropdown.width = 200
+$TopFolderDropdown.AutoSize = $true
+$TopFolderList = @('FolderSimulateLongFolderNames1','Folder2','FolderSimulateLongFolderNames3')
+ForEach ($folder in $TopFolderList){
+    [void]$TopFolderDropdown.Items.Add($folder)
+}
+$TopFolderDropdown.SelectedIndex = 0
+$TopFolderDropdown.Location = New-Object System.Drawing.Point(90,10)
+$ViewCurrentTasksTab.Controls.Add($TopFolderDropdown)
 
+#Sub Folder Dropdown
+$SubFolderDropdownLabel = New-Object System.Windows.Forms.Label
+$SubFolderDropdownLabel.text = "Sub Folder"
+$SubFolderDropdownLabel.Width = 70
+$SubFolderDropdownLabel.location = New-Object System.Drawing.Point(10,35)
+$ViewCurrentTasksTab.Controls.Add($SubFolderDropdownLabel)
+$SubFolderDropdown = New-Object System.Windows.Forms.ComboBox
+$SubFolderDropdown.text = ""
+$SubFolderDropdown.width = 200
+$SubFolderDropdown.AutoSize = $true
+$SubFolderList = @('FolderSimulateLongFolderNames1','Folder2','FolderSimulateLongFolderNames3')
+ForEach ($folder in $SubFolderList){
+    [void]$SubFolderDropdown.Items.Add($folder)
+}
+$SubFolderDropdown.SelectedIndex = 0
+$SubFolderDropdown.Location = New-Object System.Drawing.Point(90,35)
+$ViewCurrentTasksTab.Controls.Add($SubFolderDropdown)
 
-
+###################################################################################
+#  1) Start Window                                                                #
+###################################################################################
 $Form.Add_Shown({$form.Activate()})
 [void] $form.ShowDialog()
