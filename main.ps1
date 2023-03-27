@@ -70,7 +70,7 @@ $TopFolderDropdown = New-Object System.Windows.Forms.ComboBox
 $TopFolderDropdown.text = ""
 $TopFolderDropdown.width = 200
 $TopFolderDropdown.AutoSize = $true
-$TopFolderList = @('FolderSimulateLongFolderNames1','Folder2','FolderSimulateLongFolderNames3')
+$TopFolderList = @('','FolderSimulateLongFolderNames1','Folder2','FolderSimulateLongFolderNames3')
 ForEach ($folder in $TopFolderList){
     [void]$TopFolderDropdown.Items.Add($folder)
 }
@@ -88,7 +88,7 @@ $SubFolderDropdown = New-Object System.Windows.Forms.ComboBox
 $SubFolderDropdown.text = ""
 $SubFolderDropdown.width = 200
 $SubFolderDropdown.AutoSize = $true
-$SubFolderList = @('FolderSimulateLongFolderNames1','Folder2','FolderSimulateLongFolderNames3')
+$SubFolderList = @('','FolderSimulateLongFolderNames1','Folder2','FolderSimulateLongFolderNames3')
 ForEach ($folder in $SubFolderList){
     [void]$SubFolderDropdown.Items.Add($folder)
 }
@@ -106,13 +106,21 @@ $TaskSelectionDropdown = New-Object System.Windows.Forms.ComboBox
 $TaskSelectionDropdown.text = ""
 $TaskSelectionDropdown.width = 200
 $TaskSelectionDropdown.AutoSize = $true
-$TasksList = @('TaskSimulateLongTaskNames1','Task2','TaskSimulateLongTaskNames3')
+$TasksList = @('','TaskSimulateLongTaskNames1','Task2','TaskSimulateLongTaskNames3')
 ForEach ($folder in $TasksList){
     [void]$TaskSelectionDropdown.Items.Add($folder)
 }
 $TaskSelectionDropdown.SelectedIndex = 0
 $TaskSelectionDropdown.Location = New-Object System.Drawing.Point(385,10)
 $ViewCurrentTasksTab.Controls.Add($TaskSelectionDropdown)
+
+#Refresh button
+$RefreshButton = New-Object System.Windows.Forms.Button
+$RefreshButton.Location = New-Object System.Drawing.Point(600,40)
+$RefreshButton.Size = New-Object System.Drawing.Point(120,25)
+$RefreshButton.Text = "Refresh"
+#$RefreshButton.Add_Click($Function)
+$ViewCurrentTasksTab.Controls.Add($RefreshButton)
 
 #Divider
 $Divider = New-Object System.Windows.Forms.Label
@@ -183,6 +191,7 @@ $NextRunDate.text = "Date Information"
 $NextRunDate.Width = 120
 $NextRunDate.location = New-Object System.Drawing.Point(95,220)
 $ViewCurrentTasksTab.Controls.Add($NextRunDate)
+
 
 ###################################################################################
 #  4) Start Window                                                                #
