@@ -56,11 +56,21 @@ function Get-Tasks{
 function Get-Refresh{
     $Task = (Get-ScheduledTask $TaskSelectionDropdown.SelectedItem)
     $TaskHistory = (Get-ScheduledTaskInfo $TaskSelectionDropdown.SelectedItem)
+    $isEnabled = $Task.Settings.Enabled
+    if($isEnabled -eq "True"){
+        $ViewCurrentTasksTab.Controls.Remove($EnableButton)
+        $ViewCurrentTasksTab.Controls.Add($DisableButton)
+    }
+    else{
+        $ViewCurrentTasksTab.Controls.Remove($DisableButton)
+        $ViewCurrentTasksTab.Controls.Add($EnableButton)
+    }
 
     $TaskName.Text = $Task.TaskName
     $TaskPath.Text = $task.TaskPath
     $TaskDescription.Text = $Task.Description
     $State.Text = $Task.State | Out-String
+    $Enabled.Text = $Task.Settings.Enabled
     $LastRunDate.Text = $TaskHistory.LastRunDate
     $NextRunDate.Text = $TaskHistory.NextRunDate
     $ExecuteFile.Text = $Task.Actions.Execute
@@ -70,7 +80,6 @@ function Get-Refresh{
 
 function Update-Task{
     $Task = (Get-ScheduledTask $TaskSelectionDropdown.SelectedItem)
-
     Update-FieldFormat
     #Save Changes Button
     $SaveChangesButton = New-Object System.Windows.Forms.Button
@@ -127,7 +136,6 @@ function Reset-FieldFormat{
     $Arguments.BorderStyle = 0
     $Arguments.BackColor = $ViewCurrentTasksTab.BackColor
 }
-
 
 ###################################################################################
 #  3) Window Box And Tab Creation                                                 #
@@ -288,16 +296,31 @@ $State.BorderStyle = 0
 $State.BackColor = $ViewCurrentTasksTab.BackColor
 $ViewCurrentTasksTab.Controls.Add($State)
 
+#Enabled
+$EnabledLabel = New-Object System.Windows.Forms.Label
+$EnabledLabel.text = "Enabled:"
+$EnabledLabel.Width = 70
+$EnabledLabel.location = New-Object System.Drawing.Point(10,190)
+$ViewCurrentTasksTab.Controls.Add($EnabledLabel)
+$Enabled = New-Object System.Windows.Forms.TextBox
+$Enabled.text = ""
+$Enabled.Width = 70
+$Enabled.location = New-Object System.Drawing.Point(80,190)
+$Enabled.ReadOnly = $true
+$Enabled.BorderStyle = 0
+$Enabled.BackColor = $ViewCurrentTasksTab.BackColor
+$ViewCurrentTasksTab.Controls.Add($Enabled)
+
 #Last Run Date
 $LastRunDateLabel = New-Object System.Windows.Forms.Label
 $LastRunDateLabel.text = "Last Run Date:"
 $LastRunDateLabel.Width = 85
-$LastRunDateLabel.location = New-Object System.Drawing.Point(10,190)
+$LastRunDateLabel.location = New-Object System.Drawing.Point(10,220)
 $ViewCurrentTasksTab.Controls.Add($LastRunDateLabel)
 $LastRunDate = New-Object System.Windows.Forms.TextBox
 $LastRunDate.text = ""
 $LastRunDate.Width = 200
-$LastRunDate.location = New-Object System.Drawing.Point(95,190)
+$LastRunDate.location = New-Object System.Drawing.Point(95,220)
 $LastRunDate.ReadOnly = $true
 $LastRunDate.BorderStyle = 0
 $LastRunDate.BackColor = $ViewCurrentTasksTab.BackColor
@@ -307,12 +330,12 @@ $ViewCurrentTasksTab.Controls.Add($LastRunDate)
 $NextRunDateLabel = New-Object System.Windows.Forms.Label
 $NextRunDateLabel.text = "Next Run Date:"
 $NextRunDateLabel.Width = 85
-$NextRunDateLabel.location = New-Object System.Drawing.Point(10,220)
+$NextRunDateLabel.location = New-Object System.Drawing.Point(10,250)
 $ViewCurrentTasksTab.Controls.Add($NextRunDateLabel)
 $NextRunDate = New-Object System.Windows.Forms.TextBox
 $NextRunDate.text = ""
 $NextRunDate.Width = 200
-$NextRunDate.location = New-Object System.Drawing.Point(95,220)
+$NextRunDate.location = New-Object System.Drawing.Point(95,250)
 $NextRunDate.ReadOnly = $true
 $NextRunDate.BorderStyle = 0
 $NextRunDate.BackColor = $ViewCurrentTasksTab.BackColor
@@ -322,13 +345,13 @@ $ViewCurrentTasksTab.Controls.Add($NextRunDate)
 $TaskDescriptionLabel = New-Object System.Windows.Forms.Label
 $TaskDescriptionLabel.text = "Description:"
 $TaskDescriptionLabel.Width = 85
-$TaskDescriptionLabel.location = New-Object System.Drawing.Point(10,250)
+$TaskDescriptionLabel.location = New-Object System.Drawing.Point(10,280)
 $ViewCurrentTasksTab.Controls.Add($TaskDescriptionLabel)
 $TaskDescription = New-Object System.Windows.Forms.TextBox
 $TaskDescription.text = ""
 $TaskDescription.Width = 800
 $TaskDescription.Height = 70
-$TaskDescription.location = New-Object System.Drawing.Point(95,250)
+$TaskDescription.location = New-Object System.Drawing.Point(95,280)
 $TaskDescription.ReadOnly = $true
 $TaskDescription.BorderStyle = 0
 $TaskDescription.BackColor = $ViewCurrentTasksTab.BackColor
@@ -339,12 +362,12 @@ $ViewCurrentTasksTab.Controls.Add($TaskDescription)
 $ExecuteFileLabel = New-Object System.Windows.Forms.Label
 $ExecuteFileLabel.text = "Execute:"
 $ExecuteFileLabel.Width = 85
-$ExecuteFileLabel.location = New-Object System.Drawing.Point(10,320)
+$ExecuteFileLabel.location = New-Object System.Drawing.Point(10,350)
 $ViewCurrentTasksTab.Controls.Add($ExecuteFileLabel)
 $ExecuteFile = New-Object System.Windows.Forms.TextBox
 $ExecuteFile.text = ""
 $ExecuteFile.Width = 800
-$ExecuteFile.location = New-Object System.Drawing.Point(95,320)
+$ExecuteFile.location = New-Object System.Drawing.Point(95,350)
 $ExecuteFile.ReadOnly = $true
 $ExecuteFile.BorderStyle = 0
 $ExecuteFile.BackColor = $ViewCurrentTasksTab.BackColor
@@ -354,12 +377,12 @@ $ViewCurrentTasksTab.Controls.Add($ExecuteFile)
 $ArgumentsLabel = New-Object System.Windows.Forms.Label
 $ArgumentsLabel.text = "Arguments:"
 $ArgumentsLabel.Width = 85
-$ArgumentsLabel.location = New-Object System.Drawing.Point(10,350)
+$ArgumentsLabel.location = New-Object System.Drawing.Point(10,380)
 $ViewCurrentTasksTab.Controls.Add($ArgumentsLabel)
 $Arguments = New-Object System.Windows.Forms.TextBox
 $Arguments.text = ""
 $Arguments.Width = 800
-$Arguments.location = New-Object System.Drawing.Point(95,350)
+$Arguments.location = New-Object System.Drawing.Point(95,380)
 $Arguments.ReadOnly = $true
 $Arguments.BorderStyle = 0
 $Arguments.BackColor = $ViewCurrentTasksTab.BackColor
@@ -369,12 +392,12 @@ $ViewCurrentTasksTab.Controls.Add($Arguments)
 $WorkingDirectoryLabel = New-Object System.Windows.Forms.Label
 $WorkingDirectoryLabel.text = "Working Directory:"
 $WorkingDirectoryLabel.Width = 100
-$WorkingDirectoryLabel.location = New-Object System.Drawing.Point(10,380)
+$WorkingDirectoryLabel.location = New-Object System.Drawing.Point(10,410)
 $ViewCurrentTasksTab.Controls.Add($WorkingDirectoryLabel)
 $WorkingDirectory = New-Object System.Windows.Forms.TextBox
 $WorkingDirectory.text = ""
 $WorkingDirectory.Width = 800
-$WorkingDirectory.location = New-Object System.Drawing.Point(115,380)
+$WorkingDirectory.location = New-Object System.Drawing.Point(115,410)
 $WorkingDirectory.ReadOnly = $true
 $WorkingDirectory.BorderStyle = 0
 $WorkingDirectory.BackColor = $ViewCurrentTasksTab.BackColor
