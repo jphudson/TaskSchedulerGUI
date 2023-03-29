@@ -6,8 +6,8 @@
 #     2) Functions                                                                #
 #     3) Window Box And Tab Creation                                              #
 #     4) View Current Tasks Tab Elements                                          #
-#     5) Modify or Create Tasks Tab Elements                                      #
-#     5) Start Window                                                             #
+#     5) Create Tasks Tab Elements                                      #
+#     6) Start Window                                                             #
 #                                                                                 #
 #                                                                                 #
 #  Created By: John Hudson                                                        #
@@ -38,6 +38,7 @@ function Get-TaskPaths{
     foreach ($path in $paths){
         [void]$TaskPathDropdown.Items.Add($path)
     }
+    Reset-FieldFormat
 }
 
 function Get-Tasks{
@@ -48,8 +49,10 @@ function Get-Tasks{
     foreach($task in $tasks){
         [void]$TaskSelectionDropdown.Items.Add($task)
     }
+    Reset-FieldFormat
 }
 
+#Need to make this a bit more elegant
 function Get-Refresh{
     $Task = (Get-ScheduledTask $TaskSelectionDropdown.SelectedItem)
     $TaskHistory = (Get-ScheduledTaskInfo $TaskSelectionDropdown.SelectedItem)
@@ -63,8 +66,68 @@ function Get-Refresh{
     $ExecuteFile.Text = $Task.Actions.Execute
     $Arguments.Text = $Task.Actions.Arguments
     $WorkingDirectory.Text = $Task.Actions.WorkingDirectory
-
 }
+
+function Update-Task{
+    $Task = (Get-ScheduledTask $TaskSelectionDropdown.SelectedItem)
+
+    Update-FieldFormat
+    #Save Changes Button
+    $SaveChangesButton = New-Object System.Windows.Forms.Button
+    $SaveChangesButton.Location = New-Object System.Drawing.Point(780,40)
+    $SaveChangesButton.Size = New-Object System.Drawing.Point(120,25)
+    $SaveChangesButton.Text = "Save Changes"
+    $SaveChangesButton.Add_Click({Save-Changes})
+    $ViewCurrentTasksTab.Controls.Add($SaveChangesButton)
+
+    $CancelChangesButton = New-Object System.Windows.Forms.Button
+    $CancelChangesButton.Location = New-Object System.Drawing.Point(905,40)
+    $CancelChangesButton.Size = New-Object System.Drawing.Point(120,25)
+    $CancelChangesButton.Text = "Cancel Changes"
+    $CancelChangesButton.Add_Click({Clear-Changes})
+    $ViewCurrentTasksTab.Controls.Add($CancelChangesButton)
+}
+
+function Update-FieldFormat{
+    $TaskDescription.ReadOnly = $false
+    $TaskDescription.BorderStyle = 1
+    $TaskDescription.BackColor = "#ffffff"
+    $ExecuteFile.ReadOnly = $false
+    $ExecuteFile.BorderStyle = 1
+    $ExecuteFile.BackColor = "#ffffff"
+    $WorkingDirectory.ReadOnly = $false
+    $WorkingDirectory.BorderStyle = 1
+    $WorkingDirectory.BackColor = "#ffffff"
+    $Arguments.ReadOnly = $false
+    $Arguments.BorderStyle = 1
+    $Arguments.BackColor = "#ffffff"
+}
+
+function Save-Changes{
+    #TODO Confirmation needed and make Changes to Task
+    Reset-FieldFormat
+}
+function Clear-Changes{
+    #TODO Confirmation needed
+    Reset-FieldFormat
+    Get-Refresh
+}
+
+function Reset-FieldFormat{
+    $TaskDescription.ReadOnly = $true
+    $TaskDescription.BorderStyle = 0
+    $TaskDescription.BackColor = $ViewCurrentTasksTab.BackColor
+    $ExecuteFile.ReadOnly = $true
+    $ExecuteFile.BorderStyle = 0
+    $ExecuteFile.BackColor = $ViewCurrentTasksTab.BackColor
+    $WorkingDirectory.ReadOnly = $true
+    $WorkingDirectory.BorderStyle = 0
+    $WorkingDirectory.BackColor = $ViewCurrentTasksTab.BackColor
+    $Arguments.ReadOnly = $true
+    $Arguments.BorderStyle = 0
+    $Arguments.BackColor = $ViewCurrentTasksTab.BackColor
+}
+
 
 ###################################################################################
 #  3) Window Box And Tab Creation                                                 #
@@ -98,17 +161,9 @@ $ViewCurrentTasksTab.Name = "View Scheduled Tasks"
 $ViewCurrentTasksTab.Text = "View Scheduled Tasks"
 $FormTabControl.Controls.Add($ViewCurrentTasksTab)
 
-#Modify Tasks Tab creation
-$ModifyTasksTab = New-Object System.Windows.Forms.Tabpage
-$ModifyTasksTab.DataBindings.DefaultDataSourceUpdateMode = 1
-$ModifyTasksTab.UseVisualStyleBackColor = $true
-$ModifyTasksTab.Name = "Modify Scheduled Tasks"
-$ModifyTasksTab.Text = "Modify Scheduled Tasks"
-$FormTabControl.Controls.Add($ModifyTasksTab)
-
 #Create Tasks Tab creation
 $CreateTasksTab = New-Object System.Windows.Forms.Tabpage
-$CreateTasksTab.DataBindings.DefaultDataSourceUpdateMode = 2
+$CreateTasksTab.DataBindings.DefaultDataSourceUpdateMode = 1
 $CreateTasksTab.UseVisualStyleBackColor = $true
 $CreateTasksTab.Name = "Create Scheduled Tasks"
 $CreateTasksTab.Text = "Create Scheduled Tasks"
@@ -150,11 +205,19 @@ $ViewCurrentTasksTab.Controls.Add($TaskSelectionDropdown)
 
 #Refresh button
 $RefreshButton = New-Object System.Windows.Forms.Button
-$RefreshButton.Location = New-Object System.Drawing.Point(600,40)
+$RefreshButton.Location = New-Object System.Drawing.Point(650,10)
 $RefreshButton.Size = New-Object System.Drawing.Point(120,25)
 $RefreshButton.Text = "Refresh"
 $RefreshButton.Add_Click({Get-Refresh})
 $ViewCurrentTasksTab.Controls.Add($RefreshButton)
+
+#Modify Button
+$ModifyButton = New-Object System.Windows.Forms.Button
+$ModifyButton.Location = New-Object System.Drawing.Point(650,40)
+$ModifyButton.Size = New-Object System.Drawing.Point(120,25)
+$ModifyButton.Text = "Modify"
+$ModifyButton.Add_Click({Update-Task})
+$ViewCurrentTasksTab.Controls.Add($ModifyButton)
 
 #Divider
 $Divider = New-Object System.Windows.Forms.Label
@@ -303,64 +366,20 @@ $WorkingDirectory.BorderStyle = 0
 $WorkingDirectory.BackColor = $ViewCurrentTasksTab.BackColor
 $ViewCurrentTasksTab.Controls.Add($WorkingDirectory)
 
-###################################################################################
-#  5) Modify Tasks Tab Elements                                                   #
-###################################################################################
-
-#Top Folder Dropdown
-$MTTaskPathDropdownLabel = New-Object System.Windows.Forms.Label
-$MTTaskPathDropdownLabel.text = "Task Path:"
-$MTTaskPathDropdownLabel.Width = 70
-$MTTaskPathDropdownLabel.location = New-Object System.Drawing.Point(10,10)
-$ModifyTasksTab.Controls.Add($MTTaskPathDropdownLabel)
-$MTTaskPathDropdown = New-Object System.Windows.Forms.ComboBox
-$MTTaskPathDropdown.text = ""
-$MTTaskPathDropdown.width = 200
-$MTTaskPathDropdown.AutoSize = $true
-Get-TaskPaths
-#$MTTaskPathDropdown.Add_SelectedIndexChanged({Get-Tasks})
-$MTTaskPathDropdown.SelectedIndex = 0
-$MTTaskPathDropdown.Location = New-Object System.Drawing.Point(90,10)
-$ModifyTasksTab.Controls.Add($MTTaskPathDropdown)
-
-#Task Selection
-$MTTaskSelectionDropdownLabel = New-Object System.Windows.Forms.Label
-$MTTaskSelectionDropdownLabel.text = "Task:"
-$MTTaskSelectionDropdownLabel.Width = 50
-$MTTaskSelectionDropdownLabel.location = New-Object System.Drawing.Point(335,10)
-$ModifyTasksTab.Controls.Add($TaskSelectionDropdownLabel)
-$MTTaskSelectionDropdown = New-Object System.Windows.Forms.ComboBox
-$MTTaskSelectionDropdown.text = ""
-$MTTaskSelectionDropdown.width = 200
-$MTTaskSelectionDropdown.AutoSize = $true
-$MTTaskSelectionDropdown.Location = New-Object System.Drawing.Point(385,10)
-#$TaskSelectionDropdown.Add_SelectedIndexChanged({Get-Refresh})
-$ModifyTasksTab.Controls.Add($MTTaskSelectionDropdown)
-
-#Refresh button
-$MTRefreshButton = New-Object System.Windows.Forms.Button
-$MTRefreshButton.Location = New-Object System.Drawing.Point(600,40)
-$MTRefreshButton.Size = New-Object System.Drawing.Point(120,25)
-$MTRefreshButton.Text = "Refresh"
-#$RefreshButton.Add_Click({Get-Refresh})
-$ModifyTasksTab.Controls.Add($MTRefreshButton)
-
-#Divider
-$MTDivider = New-Object System.Windows.Forms.Label
-$MTDivider.text = ""
-$MTDivider.Height = 1
-$MTDivider.Width = 1340
-$MTDivider.BorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
-$MTDivider.AutoSize = $false
-$MTDivider.location = New-Object System.Drawing.Point(10,80)
-$ModifyTasksTab.Controls.Add($MTDivider)
+#Delete Button
+$DeleteButton = New-Object System.Windows.Forms.Button
+$DeleteButton.Location = New-Object System.Drawing.Point(10,680)
+$DeleteButton.Size = New-Object System.Drawing.Point(120,25)
+$DeleteButton.Text = "Delete"
+#$DeleteButton.Add_Click({Get-Refresh})
+$ViewCurrentTasksTab.Controls.Add($DeleteButton)
 
 ###################################################################################
-#  6) Create Tasks Tab Elements                                                   #
+#  5) Create Tasks Tab Elements                                                   #
 ###################################################################################
 
 ###################################################################################
-#  7) Start Window                                                                #
+#  6) Start Window                                                                #
 ###################################################################################
 $Form.Add_Shown({$form.Activate()})
 [void] $form.ShowDialog()
