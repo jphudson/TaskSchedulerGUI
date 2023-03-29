@@ -2,10 +2,11 @@
 #                                                                                 #
 #  GUI interface for creating, deleting, and modifying tasks                      #
 #                                                                                 #
-#     1) Functions                                                                #
-#     2) Window Box And Tab Creation                                              #
-#     3) View Current Tasks Tab Elements                                          #
-#     4) Start Window                                                             #
+#     1) Variables                                                                #
+#     2) Functions                                                                #
+#     3) Window Box And Tab Creation                                              #
+#     4) View Current Tasks Tab Elements                                          #
+#     5) Start Window                                                             #
 #                                                                                 #
 #                                                                                 #
 #  Created By: John Hudson                                                        #
@@ -21,11 +22,51 @@
 ###################################################################################
 
 ###################################################################################
-#  1) Functions                                                                   #
+#  1) Variables                                                                   #
 ###################################################################################
 
+#for narrowing down the paths so it isn't cluttered with all the Windows ones
+$PATHREGEX = "\\*"
+
 ###################################################################################
-#  2) Window Box And Tab Creation                                                 #
+#  2) Functions                                                                   #
+###################################################################################
+function Get-TaskPaths{
+    $paths = Get-ScheduledTask | Where-Object {$_.$TaskPath -match $PATHREGEX} | Select-Object -Unique -ExpandProperty TaskPath
+    [void]$TaskPathDropdown.Items.Add("")
+    foreach ($path in $paths){
+        [void]$TaskPathDropdown.Items.Add($path)
+    }
+}
+
+function Get-Tasks{
+    $TaskSelectionDropdown.Items.Clear()
+    $TaskSelectionDropdown.ResetText()
+    $tasks = Get-ScheduledTask | Where-Object {$_.TaskPath -eq $TaskPathDropdown.SelectedItem} | Select-Object -ExpandProperty TaskName
+    [void]$TaskSelectionDropdown.Items.Add("")
+    foreach($task in $tasks){
+        [void]$TaskSelectionDropdown.Items.Add($task)
+    }
+}
+
+function Get-Refresh{
+    $Task = (Get-ScheduledTask $TaskSelectionDropdown.SelectedItem)
+    $TaskHistory = (Get-ScheduledTaskInfo $TaskSelectionDropdown.SelectedItem)
+
+    $TaskName.Text = $Task.TaskName
+    $TaskPath.Text = $task.TaskPath
+    $TaskDescription.Text = $Task.Description
+    $State.Text = $Task.State | Out-String
+    $LastRunDate.Text = $TaskHistory.LastRunDate
+    $NextRunDate.Text = $TaskHistory.NextRunDate
+    $ExecuteFile.Text = $Task.Actions.Execute
+    $Arguments.Text = $Task.Actions.Arguments
+    $WorkingDirectory.Text = $Task.Actions.WorkingDirectory
+
+}
+
+###################################################################################
+#  3) Window Box And Tab Creation                                                 #
 ###################################################################################
 
 [void][System.Reflection.Assembly]::LoadwithPartialName("System.Drawing")
@@ -57,44 +98,24 @@ $ViewCurrentTasksTab.Text = "View Scheduled Tasks"
 $FormTabControl.Controls.Add($ViewCurrentTasksTab)
 
 ###################################################################################
-#  3) View Current Tasks Tab Elements                                             #
+#  4) View Current Tasks Tab Elements                                             #
 ###################################################################################
 
 #Top Folder Dropdown
-$TopFolderDropdownLabel = New-Object System.Windows.Forms.Label
-$TopFolderDropdownLabel.text = "Top Folder:"
-$TopFolderDropdownLabel.Width = 70
-$TopFolderDropdownLabel.location = New-Object System.Drawing.Point(10,10)
-$ViewCurrentTasksTab.Controls.Add($TopFolderDropdownLabel)
-$TopFolderDropdown = New-Object System.Windows.Forms.ComboBox
-$TopFolderDropdown.text = ""
-$TopFolderDropdown.width = 200
-$TopFolderDropdown.AutoSize = $true
-$TopFolderList = @('','FolderSimulateLongFolderNames1','Folder2','FolderSimulateLongFolderNames3')
-ForEach ($folder in $TopFolderList){
-    [void]$TopFolderDropdown.Items.Add($folder)
-}
-$TopFolderDropdown.SelectedIndex = 0
-$TopFolderDropdown.Location = New-Object System.Drawing.Point(90,10)
-$ViewCurrentTasksTab.Controls.Add($TopFolderDropdown)
-
-#Sub Folder Dropdown
-$SubFolderDropdownLabel = New-Object System.Windows.Forms.Label
-$SubFolderDropdownLabel.text = "Sub Folder:"
-$SubFolderDropdownLabel.Width = 70
-$SubFolderDropdownLabel.location = New-Object System.Drawing.Point(10,35)
-$ViewCurrentTasksTab.Controls.Add($SubFolderDropdownLabel)
-$SubFolderDropdown = New-Object System.Windows.Forms.ComboBox
-$SubFolderDropdown.text = ""
-$SubFolderDropdown.width = 200
-$SubFolderDropdown.AutoSize = $true
-$SubFolderList = @('','FolderSimulateLongFolderNames1','Folder2','FolderSimulateLongFolderNames3')
-ForEach ($folder in $SubFolderList){
-    [void]$SubFolderDropdown.Items.Add($folder)
-}
-$SubFolderDropdown.SelectedIndex = 0
-$SubFolderDropdown.Location = New-Object System.Drawing.Point(90,35)
-$ViewCurrentTasksTab.Controls.Add($SubFolderDropdown)
+$TaskPathDropdownLabel = New-Object System.Windows.Forms.Label
+$TaskPathDropdownLabel.text = "Task Path:"
+$TaskPathDropdownLabel.Width = 70
+$TaskPathDropdownLabel.location = New-Object System.Drawing.Point(10,10)
+$ViewCurrentTasksTab.Controls.Add($TaskPathDropdownLabel)
+$TaskPathDropdown = New-Object System.Windows.Forms.ComboBox
+$TaskPathDropdown.text = ""
+$TaskPathDropdown.width = 200
+$TaskPathDropdown.AutoSize = $true
+Get-TaskPaths
+$TaskPathDropdown.Add_SelectedIndexChanged({Get-Tasks})
+$TaskPathDropdown.SelectedIndex = 0
+$TaskPathDropdown.Location = New-Object System.Drawing.Point(90,10)
+$ViewCurrentTasksTab.Controls.Add($TaskPathDropdown)
 
 #Task Selection
 $TaskSelectionDropdownLabel = New-Object System.Windows.Forms.Label
@@ -106,12 +127,8 @@ $TaskSelectionDropdown = New-Object System.Windows.Forms.ComboBox
 $TaskSelectionDropdown.text = ""
 $TaskSelectionDropdown.width = 200
 $TaskSelectionDropdown.AutoSize = $true
-$TasksList = @('','TaskSimulateLongTaskNames1','Task2','TaskSimulateLongTaskNames3')
-ForEach ($folder in $TasksList){
-    [void]$TaskSelectionDropdown.Items.Add($folder)
-}
-$TaskSelectionDropdown.SelectedIndex = 0
 $TaskSelectionDropdown.Location = New-Object System.Drawing.Point(385,10)
+$TaskSelectionDropdown.Add_SelectedIndexChanged({Get-Refresh})
 $ViewCurrentTasksTab.Controls.Add($TaskSelectionDropdown)
 
 #Refresh button
@@ -138,10 +155,13 @@ $TaskNameLabel.text = "Task Name:"
 $TaskNameLabel.Width = 70
 $TaskNameLabel.location = New-Object System.Drawing.Point(10,100)
 $ViewCurrentTasksTab.Controls.Add($TaskNameLabel)
-$TaskName = New-Object System.Windows.Forms.Label
-$TaskName.text = "Test Name"
-$TaskName.Width = 70
+$TaskName = New-Object System.Windows.Forms.TextBox
+$TaskName.text = ""
+$TaskName.Width = 400
 $TaskName.location = New-Object System.Drawing.Point(80,100)
+$TaskName.ReadOnly = $true
+$TaskName.BorderStyle = 0
+$TaskName.BackColor = $ViewCurrentTasksTab.BackColor
 $ViewCurrentTasksTab.Controls.Add($TaskName)
 
 #Task Path
@@ -150,10 +170,13 @@ $TaskPathLabel.text = "Task Path:"
 $TaskPathLabel.Width = 70
 $TaskPathLabel.location = New-Object System.Drawing.Point(10,130)
 $ViewCurrentTasksTab.Controls.Add($TaskPathLabel)
-$TaskPath = New-Object System.Windows.Forms.Label
-$TaskPath.text = "Test Path"
-$TaskPath.Width = 70
+$TaskPath = New-Object System.Windows.Forms.TextBox
+$TaskPath.text = ""
+$TaskPath.Width = 400
 $TaskPath.location = New-Object System.Drawing.Point(80,130)
+$TaskPath.ReadOnly = $true
+$TaskPath.BorderStyle = 0
+$TaskPath.BackColor = $ViewCurrentTasksTab.BackColor
 $ViewCurrentTasksTab.Controls.Add($TaskPath)
 
 #State
@@ -162,10 +185,13 @@ $StateLabel.text = "State:"
 $StateLabel.Width = 70
 $StateLabel.location = New-Object System.Drawing.Point(10,160)
 $ViewCurrentTasksTab.Controls.Add($StateLabel)
-$State = New-Object System.Windows.Forms.Label
-$State.text = "Status"
+$State = New-Object System.Windows.Forms.TextBox
+$State.text = ""
 $State.Width = 70
 $State.location = New-Object System.Drawing.Point(80,160)
+$State.ReadOnly = $true
+$State.BorderStyle = 0
+$State.BackColor = $ViewCurrentTasksTab.BackColor
 $ViewCurrentTasksTab.Controls.Add($State)
 
 #Last Run Date
@@ -174,10 +200,13 @@ $LastRunDateLabel.text = "Last Run Date:"
 $LastRunDateLabel.Width = 85
 $LastRunDateLabel.location = New-Object System.Drawing.Point(10,190)
 $ViewCurrentTasksTab.Controls.Add($LastRunDateLabel)
-$LastRunDate = New-Object System.Windows.Forms.Label
-$LastRunDate.text = "Date Information"
-$LastRunDate.Width = 120
+$LastRunDate = New-Object System.Windows.Forms.TextBox
+$LastRunDate.text = ""
+$LastRunDate.Width = 200
 $LastRunDate.location = New-Object System.Drawing.Point(95,190)
+$LastRunDate.ReadOnly = $true
+$LastRunDate.BorderStyle = 0
+$LastRunDate.BackColor = $ViewCurrentTasksTab.BackColor
 $ViewCurrentTasksTab.Controls.Add($LastRunDate)
 
 #Next Run Date
@@ -186,15 +215,79 @@ $NextRunDateLabel.text = "Next Run Date:"
 $NextRunDateLabel.Width = 85
 $NextRunDateLabel.location = New-Object System.Drawing.Point(10,220)
 $ViewCurrentTasksTab.Controls.Add($NextRunDateLabel)
-$NextRunDate = New-Object System.Windows.Forms.Label
-$NextRunDate.text = "Date Information"
-$NextRunDate.Width = 120
+$NextRunDate = New-Object System.Windows.Forms.TextBox
+$NextRunDate.text = ""
+$NextRunDate.Width = 200
 $NextRunDate.location = New-Object System.Drawing.Point(95,220)
+$NextRunDate.ReadOnly = $true
+$NextRunDate.BorderStyle = 0
+$NextRunDate.BackColor = $ViewCurrentTasksTab.BackColor
 $ViewCurrentTasksTab.Controls.Add($NextRunDate)
 
+#Task Description
+$TaskDescriptionLabel = New-Object System.Windows.Forms.Label
+$TaskDescriptionLabel.text = "Description:"
+$TaskDescriptionLabel.Width = 85
+$TaskDescriptionLabel.location = New-Object System.Drawing.Point(10,250)
+$ViewCurrentTasksTab.Controls.Add($TaskDescriptionLabel)
+$TaskDescription = New-Object System.Windows.Forms.TextBox
+$TaskDescription.text = ""
+$TaskDescription.Width = 800
+$TaskDescription.Height = 70
+$TaskDescription.location = New-Object System.Drawing.Point(95,250)
+$TaskDescription.ReadOnly = $true
+$TaskDescription.BorderStyle = 0
+$TaskDescription.BackColor = $ViewCurrentTasksTab.BackColor
+$TaskDescription.Multiline = $true
+$ViewCurrentTasksTab.Controls.Add($TaskDescription)
+
+#Execute File
+$ExecuteFileLabel = New-Object System.Windows.Forms.Label
+$ExecuteFileLabel.text = "Execute:"
+$ExecuteFileLabel.Width = 85
+$ExecuteFileLabel.location = New-Object System.Drawing.Point(10,320)
+$ViewCurrentTasksTab.Controls.Add($ExecuteFileLabel)
+$ExecuteFile = New-Object System.Windows.Forms.TextBox
+$ExecuteFile.text = ""
+$ExecuteFile.Width = 800
+$ExecuteFile.location = New-Object System.Drawing.Point(95,320)
+$ExecuteFile.ReadOnly = $true
+$ExecuteFile.BorderStyle = 0
+$ExecuteFile.BackColor = $ViewCurrentTasksTab.BackColor
+$ViewCurrentTasksTab.Controls.Add($ExecuteFile)
+
+#Arguments
+$ArgumentsLabel = New-Object System.Windows.Forms.Label
+$ArgumentsLabel.text = "Arguments:"
+$ArgumentsLabel.Width = 85
+$ArgumentsLabel.location = New-Object System.Drawing.Point(10,350)
+$ViewCurrentTasksTab.Controls.Add($ArgumentsLabel)
+$Arguments = New-Object System.Windows.Forms.TextBox
+$Arguments.text = ""
+$Arguments.Width = 800
+$Arguments.location = New-Object System.Drawing.Point(95,350)
+$Arguments.ReadOnly = $true
+$Arguments.BorderStyle = 0
+$Arguments.BackColor = $ViewCurrentTasksTab.BackColor
+$ViewCurrentTasksTab.Controls.Add($Arguments)
+
+#Working Directory
+$WorkingDirectoryLabel = New-Object System.Windows.Forms.Label
+$WorkingDirectoryLabel.text = "Working Directory:"
+$WorkingDirectoryLabel.Width = 100
+$WorkingDirectoryLabel.location = New-Object System.Drawing.Point(10,380)
+$ViewCurrentTasksTab.Controls.Add($WorkingDirectoryLabel)
+$WorkingDirectory = New-Object System.Windows.Forms.TextBox
+$WorkingDirectory.text = ""
+$WorkingDirectory.Width = 800
+$WorkingDirectory.location = New-Object System.Drawing.Point(115,380)
+$WorkingDirectory.ReadOnly = $true
+$WorkingDirectory.BorderStyle = 0
+$WorkingDirectory.BackColor = $ViewCurrentTasksTab.BackColor
+$ViewCurrentTasksTab.Controls.Add($WorkingDirectory)
 
 ###################################################################################
-#  4) Start Window                                                                #
+#  5) Start Window                                                                #
 ###################################################################################
 $Form.Add_Shown({$form.Activate()})
 [void] $form.ShowDialog()
