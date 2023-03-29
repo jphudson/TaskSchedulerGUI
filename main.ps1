@@ -211,6 +211,20 @@ $RefreshButton.Text = "Refresh"
 $RefreshButton.Add_Click({Get-Refresh})
 $ViewCurrentTasksTab.Controls.Add($RefreshButton)
 
+#Enable button
+$EnableButton = New-Object System.Windows.Forms.Button
+$EnableButton.Location = New-Object System.Drawing.Point(780,10)
+$EnableButton.Size = New-Object System.Drawing.Point(120,25)
+$EnableButton.Text = "Enable"
+$EnableButton.Add_Click({Get-Refresh})
+
+#Disable button
+$DisableButton = New-Object System.Windows.Forms.Button
+$DisableButton.Location = New-Object System.Drawing.Point(780,10)
+$DisableButton.Size = New-Object System.Drawing.Point(120,25)
+$DisableButton.Text = "Disable"
+$DisableButton.Add_Click({Get-Refresh})
+
 #Modify Button
 $ModifyButton = New-Object System.Windows.Forms.Button
 $ModifyButton.Location = New-Object System.Drawing.Point(650,40)
