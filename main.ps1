@@ -33,7 +33,7 @@ $PATHREGEX = "\\*"
 #  2) Functions                                                                   #
 ###################################################################################
 function Get-TaskPaths{
-    $paths = Get-ScheduledTask | Where-Object {$_.$TaskPath -match $PATHREGEX} | Select-Object -Unique -ExpandProperty TaskPath
+    $paths = Get-ScheduledTask | Where-Object {$_.TaskPath -match $PATHREGEX} | Select-Object -Unique -ExpandProperty TaskPath
     [void]$TaskPathDropdown.Items.Add("")
     foreach ($path in $paths){
         [void]$TaskPathDropdown.Items.Add($path)
